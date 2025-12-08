@@ -1,4 +1,4 @@
-const API_BASE = "https://iot-server-3v9j.onrender.com"; // ⚙️ URL server Render
+const API_BASE = "https://iot-server-yc6r.onrender.com"; // ⚙️ URL server Render
 
 const elBoxes = document.getElementById("sensor-boxes");
 const elMode = document.getElementById("toggleMode");
