@@ -18,14 +18,12 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
 <div class="container py-4">
 <h1 class="fw-bold text-center mb-4">🌱 IoT Smart Garden Dashboard</h1>
 
-<!-- SENSOR DATA -->
 <div class="row g-3 mb-3">
   <div class="col-md-4"><div class="card gradient-card"><div>🌿 Độ ẩm đất</div><div class="sensor-value" id="soil">- %</div></div></div>
   <div class="col-md-4"><div class="card gradient-card2"><div>🌤 Nhiệt độ</div><div class="sensor-value" id="temp">- °C</div></div></div>
   <div class="col-md-4"><div class="card gradient-card3"><div>💧 Độ ẩm KK</div><div class="sensor-value" id="hum">- %</div></div></div>
 </div>
 
-<!-- SYSTEM STATUS -->
 <div class="row g-3 mb-3">
   <div class="col-md-3"><div class="card"><div>Chế độ hiện tại</div><div class="sensor-value" id="currentMode">-</div></div></div>
   <div class="col-md-3"><div class="card"><div>Bơm hiện tại</div><div class="sensor-value" id="currentPump">-</div></div></div>
@@ -38,7 +36,6 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
   <div class="col-md-3"><div class="card"><div>⏱️ Thời gian tưới tiếp theo</div><div class="sensor-value" id="next_time">- phút</div></div></div>
 </div>
 
-<!-- CONTROL PANEL -->
 <div class="row g-3 mt-3">
   <div class="col-md-4">
     <div class="card p-3 text-center">
@@ -67,7 +64,6 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
   </div>
 </div>
 
-<!-- SCHEDULE -->
 <div class="row g-3 mt-3">
   <div class="col-md-12">
     <div class="card p-3">
@@ -81,7 +77,6 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
   </div>
 </div>
 
-<!-- COMMAND QUEUE -->
 <div class="row g-3 mt-3">
   <div class="col-md-12">
     <div class="card p-3">
@@ -90,7 +85,6 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
     </div>
   </div>
 </div>
-
 </div>
 
 <script>
@@ -118,21 +112,19 @@ async function fetchData() {
     document.getElementById('pumpPowerLabel').textContent = (status.pump_power ?? 36)+'%';
     updateScheduleUI(Array.isArray(status.schedules) ? status.schedules : []);
 
-    // Lấy lệnh pending
     const cmdRes = await fetch(`${API_BASE}/api/command`);
     const cmdStr = await cmdRes.text();
     document.getElementById('commandList').textContent = cmdStr || '-';
-
   } catch(err){ console.error(err); }
 }
 
 // ================= Bật/Tắt bơm =================
 document.getElementById('pumpBtn').addEventListener('click', async ()=>{
-  const mode = document.getElementById('modeSelect').value;
+  const currentPumpState = document.getElementById('currentPump').textContent === 'BẬT';
   await fetch(`${API_BASE}/api/control`, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({pump:null, mode})
+    body: JSON.stringify({ pump: !currentPumpState })
   });
 });
 
@@ -142,7 +134,7 @@ document.getElementById('modeApply').addEventListener('click', async ()=>{
   await fetch(`${API_BASE}/api/control`, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({mode, pump:null})
+    body: JSON.stringify({ mode })
   });
 });
 
@@ -155,7 +147,7 @@ pumpPowerInput.addEventListener('change', async ()=>{
   await fetch(`${API_BASE}/api/control`, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({pump_power: parseInt(pumpPowerInput.value)})
+    body: JSON.stringify({ pump_power: parseInt(pumpPowerInput.value) })
   });
 });
 
