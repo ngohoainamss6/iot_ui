@@ -25,17 +25,12 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
   <div class="col-md-4"><div class="card gradient-card3"><div>💧 Độ ẩm KK</div><div class="sensor-value" id="hum">- %</div></div></div>
 </div>
 
-<!-- SYSTEM STATUS HIỆN TẠI -->
+<!-- SYSTEM STATUS -->
 <div class="row g-3 mb-3">
   <div class="col-md-3"><div class="card"><div>Chế độ hiện tại</div><div class="sensor-value" id="currentMode">-</div></div></div>
   <div class="col-md-3"><div class="card"><div>Bơm hiện tại</div><div class="sensor-value" id="currentPump">-</div></div></div>
   <div class="col-md-3"><div class="card"><div>📉 Min Threshold</div><div class="sensor-value" id="min_val">- %</div></div></div>
   <div class="col-md-3"><div class="card"><div>📈 Max Threshold</div><div class="sensor-value" id="max_val">- %</div></div></div>
-</div>
-
-<div class="row g-3 mb-3">
-  <div class="col-md-3"><div class="card"><div>🚿 Dòng chảy</div><div class="sensor-value" id="flow">-</div></div></div>
-  <div class="col-md-3"><div class="card"><div>⏱️ Thời gian tưới tiếp theo</div><div class="sensor-value" id="next_time">- phút</div></div></div>
 </div>
 
 <!-- CONTROL PANEL -->
@@ -104,13 +99,11 @@ async function fetchData() {
     const statusRes = await fetch(`${API_BASE}/api/status`);
     const status = await statusRes.json();
 
-    // Cập nhật sensor
     document.getElementById('soil').textContent = sensor.soil ?? '- %';
     document.getElementById('temp').textContent = sensor.temp ?? '- °C';
     document.getElementById('hum').textContent = sensor.hum ?? '- %';
     document.getElementById('flow').textContent = sensor.flow ?? '-';
 
-    // Hiển thị trạng thái thực tế
     document.getElementById('currentMode').textContent = status.mode ?? '-';
     document.getElementById('currentPump').textContent = status.pump ? 'BẬT' : 'TẮT';
     document.getElementById('min_val').textContent = status.min_val ?? '- %';
@@ -120,7 +113,7 @@ async function fetchData() {
     document.getElementById('pumpPowerLabel').textContent = (status.pump_power ?? 36)+'%';
     updateScheduleUI(Array.isArray(status.schedules) ? status.schedules : []);
 
-    // Lấy lệnh pending (ESP chưa thực hiện)
+    // Lấy lệnh pending
     const cmdRes = await fetch(`${API_BASE}/api/command`);
     const cmdStr = await cmdRes.text();
     document.getElementById('commandList').textContent = cmdStr || '-';
@@ -184,7 +177,6 @@ document.getElementById('addScheduleBtn').addEventListener('click', async ()=>{
   });
   document.getElementById('scheduleTime').value='';
 });
-
 async function removeSchedule(index){
   await fetch(`${API_BASE}/api/control`,{
     method:'POST',
