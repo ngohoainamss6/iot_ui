@@ -1,110 +1,114 @@
 <!DOCTYPE html>
+<html lang="vi">
 <html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <title>Hệ thống tưới cây</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; margin:0; padding:20px; }
+    h1 { text-align:center; }
+    .container { display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:15px; }
+    .box { background:#fff; padding:15px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1); text-align:center; }
+    .value { font-size: 1.5em; margin:10px 0; }
+    button { padding:8px 15px; margin:5px; border:none; border-radius:5px; cursor:pointer; }
+    button#pumpBtn { background:#4CAF50; color:white; }
+    button#modeBtn { background:#2196F3; color:white; }
+  </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🌱 Hệ thống tưới tự động</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
 <style>
-  body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
-  .card { border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); margin-bottom: 20px; }
-  .card-header { font-weight: bold; font-size: 1.1rem; }
-  .sensor-value { font-size: 2rem; font-weight: bold; }
-  .status-led { width:15px; height:15px; border-radius:50%; display:inline-block; margin-right:10px; }
-  .gradient-card { background: linear-gradient(135deg,#6dd5ed,#2193b0); color:#fff; }
-  .gradient-card2 { background: linear-gradient(135deg,#f093fb,#f5576c); color:#fff; }
-  .gradient-card3 { background: linear-gradient(135deg,#43e97b,#38f9d7); color:#fff; }
-  .btn-group .btn { min-width:80px; }
+  .card { margin-bottom:15px; }
+  .status-led { width:15px; height:15px; border-radius:50%; display:inline-block; margin-right:5px; }
 </style>
 </head>
 <body>
-<div class="container py-4">
-  <div class="text-center mb-4">
-    <h1 class="fw-bold">🌿 Dashboard Hệ thống tưới tự động</h1>
-    <p class="text-muted">Giám sát và điều khiển trực tiếp từ browser</p>
+  <h1>🌱 Hệ thống tưới cây</h1>
+  <div class="container">
+    <div class="box">
+      <div>🌿 Độ ẩm đất</div>
+      <div id="soil" class="value">- %</div>
+<body class="bg-light">
+<div class="container py-3">
+  <h2 class="text-center mb-4">🌿 Hệ thống tưới tự động</h2>
+  <div class="row">
+    <div class="col-md-4">
+      <div class="card text-center">
+        <div class="card-header">Độ ẩm đất</div>
+        <div class="card-body">
+          <h3 id="soil">0%</h3>
+        </div>
+      </div>
+    </div>
+    <div class="box">
+      <div>🌤 Nhiệt độ</div>
+      <div id="temp" class="value">- °C</div>
+    <div class="col-md-4">
+      <div class="card text-center">
+        <div class="card-header">Nhiệt độ</div>
+        <div class="card-body">
+          <h3 id="temp">0°C</h3>
+        </div>
+      </div>
+    </div>
+    <div class="box">
+      <div>💧 Độ ẩm KK</div>
+      <div id="hum" class="value">- %</div>
+    <div class="col-md-4">
+      <div class="card text-center">
+        <div class="card-header">Độ ẩm KK</div>
+        <div class="card-body">
+          <h3 id="hum">0%</h3>
+        </div>
+      </div>
+    </div>
+    <div class="box">
+      <div>🚿 Dòng chảy</div>
+      <div id="flow" class="value">-</div>
+    </div>
+    <div class="box">
+      <div>📉 Min Threshold</div>
+      <div id="min_val" class="value">- %</div>
+    </div>
+    <div class="box">
+      <div>📈 Max Threshold</div>
+      <div id="max_val" class="value">- %</div>
+    </div>
+    <div class="box">
+      <div>⏱️ Thời gian tưới tiếp theo</div>
+      <div id="next_time" class="value">- phút</div>
+    </div>
+    <div class="box">
+      <div>💡 Chế độ</div>
+      <div id="mode" class="value">-</div>
+      <button id="modeBtn">Đổi chế độ</button>
   </div>
 
-  <!-- SENSOR DATA -->
-  <div class="row g-3 mb-3">
-    <div class="col-md-4">
-      <div class="card gradient-card text-center p-3">
-        <div class="card-header"><i class="bi bi-droplet-half"></i> Độ ẩm đất</div>
-        <div class="card-body">
-          <div class="sensor-value" id="soil">0%</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card gradient-card2 text-center p-3">
-        <div class="card-header"><i class="bi bi-thermometer-half"></i> Nhiệt độ</div>
-        <div class="card-body">
-          <div class="sensor-value" id="temp">0°C</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card gradient-card3 text-center p-3">
-        <div class="card-header"><i class="bi bi-cloud-sun"></i> Độ ẩm KK</div>
-        <div class="card-body">
-          <div class="sensor-value" id="hum">0%</div>
-        </div>
-      </div>
-    </div>
+  <div class="row">
+    <div class="col-md-3"><div class="card text-center"><div class="card-header">Dòng chảy</div><div class="card-body"><h3 id="flow">0</h3></div></div></div>
+    <div class="col-md-3"><div class="card text-center"><div class="card-header">Min Threshold</div><div class="card-body"><h3 id="min">-</h3></div></div></div>
+    <div class="col-md-3"><div class="card text-center"><div class="card-header">Max Threshold</div><div class="card-body"><h3 id="max">-</h3></div></div></div>
+    <div class="col-md-3"><div class="card text-center"><div class="card-header">Thời gian tưới tiếp theo</div><div class="card-body"><h3 id="next">- phút</h3></div></div></div>
   </div>
 
-  <!-- SYSTEM STATUS -->
-  <div class="row g-3 mb-3">
-    <div class="col-md-3">
-      <div class="card text-center p-3">
-        <div class="card-header"><i class="bi bi-speedometer2"></i> Dòng chảy</div>
-        <div class="card-body">
-          <div class="sensor-value" id="flow">0</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-center p-3">
-        <div class="card-header"><i class="bi bi-arrow-down-circle"></i> Min Threshold</div>
-        <div class="card-body">
-          <div class="sensor-value" id="min">-</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-center p-3">
-        <div class="card-header"><i class="bi bi-arrow-up-circle"></i> Max Threshold</div>
-        <div class="card-body">
-          <div class="sensor-value" id="max">-</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-center p-3">
-        <div class="card-header"><i class="bi bi-clock"></i> Thời gian tưới tiếp theo</div>
-        <div class="card-body">
-          <div class="sensor-value" id="next">- phút</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- CONTROL -->
-  <div class="row g-3 mt-3">
+  <div class="row mt-4">
     <div class="col-md-6">
-      <div class="card text-center p-3">
-        <div class="card-header"><i class="bi bi-lightning-fill"></i> Bơm nước <span class="status-led" id="pumpLed"></span></div>
+      <div class="card text-center">
+        <div class="card-header">Bơm nước</div>
         <div class="card-body">
-          <div class="btn-group">
-            <button class="btn btn-success" onclick="controlPump(true)">ON</button>
-            <button class="btn btn-danger" onclick="controlPump(false)">OFF</button>
-          </div>
+          <button class="btn btn-success me-2" onclick="controlPump(true)">ON</button>
+          <button class="btn btn-danger" onclick="controlPump(false)">OFF</button>
         </div>
       </div>
     </div>
+    <div class="box">
+      <div>🚰 Bơm</div>
+      <div id="pump" class="value">-</div>
+      <button id="pumpBtn">Bật/Tắt</button>
     <div class="col-md-6">
-      <div class="card text-center p-3">
-        <div class="card-header"><i class="bi bi-gear-fill"></i> Chế độ</div>
+      <div class="card text-center">
+        <div class="card-header">Chế độ</div>
         <div class="card-body">
           <select id="modeSelect" class="form-select" onchange="controlMode(this.value)">
             <option value="AUTO">AUTO</option>
@@ -119,6 +123,18 @@
 </div>
 
 <script>
+const API_BASE = "https://iot-server-yc6r.onrender.com";
+
+async function fetchLatestData() {
+  try {
+    // Lấy dữ liệu sensor
+    const sensorRes = await fetch(`${API_BASE}/api/data`);
+    const sensorData = await sensorRes.json();
+    const sensor = sensorData[0] || {};
+
+    // Lấy trạng thái hệ thống
+    const statusRes = await fetch(`${API_BASE}/api/status`);
+    const status = await statusRes.json();
 async function fetchStatus(){
   try{
     const res = await fetch('/api/status');
@@ -128,10 +144,24 @@ async function fetchStatus(){
     document.getElementById('next').innerText = data.next_time+' phút';
     document.getElementById('modeSelect').value = data.mode;
     document.getElementById('flow').innerText = data.pump ? '1' : '0';
-    document.getElementById('pumpLed').style.background = data.pump ? 'green' : 'red';
   }catch(e){console.error(e);}
 }
 
+    // Cập nhật UI
+    document.getElementById('soil').textContent = sensor.soil !== undefined ? sensor.soil + '%' : '-';
+    document.getElementById('temp').textContent = sensor.temp !== undefined ? sensor.temp + '°C' : '-';
+    document.getElementById('hum').textContent = sensor.hum !== undefined ? sensor.hum + '%' : '-';
+    document.getElementById('flow').textContent = sensor.flow !== undefined ? sensor.flow : '-';
+    
+    document.getElementById('min_val').textContent = status.min_val !== undefined ? status.min_val + '%' : '-';
+    document.getElementById('max_val').textContent = status.max_val !== undefined ? status.max_val + '%' : '-';
+    document.getElementById('next_time').textContent = status.next_time !== undefined ? status.next_time + ' phút' : '-';
+    
+    document.getElementById('mode').textContent = status.mode || '-';
+    document.getElementById('pump').textContent = status.pump ? 'BẬT' : 'TẮT';
+  } catch(err) {
+    console.error('Fetch error:', err);
+  }
 async function fetchSensor(){
   try{
     const res = await fetch('/api/data');
@@ -142,25 +172,47 @@ async function fetchSensor(){
   }catch(e){console.error(e);}
 }
 
+// ================= Điều khiển từ UI =================
+document.getElementById('pumpBtn').addEventListener('click', async () => {
+  const currentPump = document.getElementById('pump').textContent === 'BẬT';
+  const mode = document.getElementById('mode').textContent || 'AUTO';
+  await fetch(`${API_BASE}/api/control`, {
 async function controlPump(state){
   await fetch('/api/control',{
     method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({ pump: !currentPump, mode })
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({pump:state, mode:document.getElementById('modeSelect').value})
   });
+  fetchLatestData();
+});
 }
 
+document.getElementById('modeBtn').addEventListener('click', async () => {
+  const modes = ['AUTO','MANUAL','SCHEDULE','SLEEP'];
+  let currentMode = document.getElementById('mode').textContent;
+  let nextMode = modes[(modes.indexOf(currentMode) + 1) % modes.length];
+  const pump = document.getElementById('pump').textContent === 'BẬT';
+  await fetch(`${API_BASE}/api/control`, {
 async function controlMode(mode){
   await fetch('/api/control',{
     method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({ pump, mode: nextMode })
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({pump:document.getElementById('flow').innerText=='1', mode:mode})
   });
+  fetchLatestData();
+});
 }
 
-// refresh 1s
-setInterval(fetchSensor,1000);
-setInterval(fetchStatus,1000);
+// ================= Auto refresh =================
+setInterval(fetchLatestData, 1000); // mỗi 1s lấy dữ liệu mới
+fetchLatestData(); // gọi ngay khi load
+// refresh mỗi 2s
+setInterval(fetchSensor,2000);
+setInterval(fetchStatus,2000);
 </script>
 </body>
 </html>
