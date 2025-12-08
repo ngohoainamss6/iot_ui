@@ -1,218 +1,122 @@
 <!DOCTYPE html>
 <html lang="vi">
-<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Hệ thống tưới cây</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f5f5f5; margin:0; padding:20px; }
-    h1 { text-align:center; }
-    .container { display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:15px; }
-    .box { background:#fff; padding:15px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1); text-align:center; }
-    .value { font-size: 1.5em; margin:10px 0; }
-    button { padding:8px 15px; margin:5px; border:none; border-radius:5px; cursor:pointer; }
-    button#pumpBtn { background:#4CAF50; color:white; }
-    button#modeBtn { background:#2196F3; color:white; }
-  </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🌱 Hệ thống tưới tự động</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<title>🌱 IoT Smart Garden Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
-  .card { margin-bottom:15px; }
-  .status-led { width:15px; height:15px; border-radius:50%; display:inline-block; margin-right:5px; }
+  .card { @apply bg-white p-4 rounded-lg shadow; }
+  .sensor-value { @apply text-2xl font-bold mt-2; }
+  .btn { @apply px-4 py-2 rounded text-white; }
+  .btn-green { @apply bg-green-500 hover:bg-green-600; }
+  .btn-red { @apply bg-red-500 hover:bg-red-600; }
 </style>
 </head>
-<body>
-  <h1>🌱 Hệ thống tưới cây</h1>
-  <div class="container">
-    <div class="box">
-      <div>🌿 Độ ẩm đất</div>
-      <div id="soil" class="value">- %</div>
-<body class="bg-light">
-<div class="container py-3">
-  <h2 class="text-center mb-4">🌿 Hệ thống tưới tự động</h2>
-  <div class="row">
-    <div class="col-md-4">
-      <div class="card text-center">
-        <div class="card-header">Độ ẩm đất</div>
-        <div class="card-body">
-          <h3 id="soil">0%</h3>
-        </div>
-      </div>
-    </div>
-    <div class="box">
-      <div>🌤 Nhiệt độ</div>
-      <div id="temp" class="value">- °C</div>
-    <div class="col-md-4">
-      <div class="card text-center">
-        <div class="card-header">Nhiệt độ</div>
-        <div class="card-body">
-          <h3 id="temp">0°C</h3>
-        </div>
-      </div>
-    </div>
-    <div class="box">
-      <div>💧 Độ ẩm KK</div>
-      <div id="hum" class="value">- %</div>
-    <div class="col-md-4">
-      <div class="card text-center">
-        <div class="card-header">Độ ẩm KK</div>
-        <div class="card-body">
-          <h3 id="hum">0%</h3>
-        </div>
-      </div>
-    </div>
-    <div class="box">
-      <div>🚿 Dòng chảy</div>
-      <div id="flow" class="value">-</div>
-    </div>
-    <div class="box">
-      <div>📉 Min Threshold</div>
-      <div id="min_val" class="value">- %</div>
-    </div>
-    <div class="box">
-      <div>📈 Max Threshold</div>
-      <div id="max_val" class="value">- %</div>
-    </div>
-    <div class="box">
-      <div>⏱️ Thời gian tưới tiếp theo</div>
-      <div id="next_time" class="value">- phút</div>
-    </div>
-    <div class="box">
-      <div>💡 Chế độ</div>
-      <div id="mode" class="value">-</div>
-      <button id="modeBtn">Đổi chế độ</button>
-  </div>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
 
-  <div class="row">
-    <div class="col-md-3"><div class="card text-center"><div class="card-header">Dòng chảy</div><div class="card-body"><h3 id="flow">0</h3></div></div></div>
-    <div class="col-md-3"><div class="card text-center"><div class="card-header">Min Threshold</div><div class="card-body"><h3 id="min">-</h3></div></div></div>
-    <div class="col-md-3"><div class="card text-center"><div class="card-header">Max Threshold</div><div class="card-body"><h3 id="max">-</h3></div></div></div>
-    <div class="col-md-3"><div class="card text-center"><div class="card-header">Thời gian tưới tiếp theo</div><div class="card-body"><h3 id="next">- phút</h3></div></div></div>
-  </div>
+<h1 class="text-3xl font-bold mb-6 text-center">🌱 IoT Smart Garden Dashboard</h1>
 
-  <div class="row mt-4">
-    <div class="col-md-6">
-      <div class="card text-center">
-        <div class="card-header">Bơm nước</div>
-        <div class="card-body">
-          <button class="btn btn-success me-2" onclick="controlPump(true)">ON</button>
-          <button class="btn btn-danger" onclick="controlPump(false)">OFF</button>
-        </div>
-      </div>
-    </div>
-    <div class="box">
-      <div>🚰 Bơm</div>
-      <div id="pump" class="value">-</div>
-      <button id="pumpBtn">Bật/Tắt</button>
-    <div class="col-md-6">
-      <div class="card text-center">
-        <div class="card-header">Chế độ</div>
-        <div class="card-body">
-          <select id="modeSelect" class="form-select" onchange="controlMode(this.value)">
-            <option value="AUTO">AUTO</option>
-            <option value="MANUAL">MANUAL</option>
-            <option value="SCHEDULE">SCHEDULE</option>
-            <option value="SLEEP">SLEEP</option>
-          </select>
-        </div>
-      </div>
-    </div>
+<!-- Sensor Data -->
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-6xl mb-6">
+  <div class="card text-center">
+    <div>🌿 Độ ẩm đất</div>
+    <div id="soil" class="sensor-value">- %</div>
   </div>
+  <div class="card text-center">
+    <div>🌤 Nhiệt độ</div>
+    <div id="temp" class="sensor-value">- °C</div>
+  </div>
+  <div class="card text-center">
+    <div>💧 Độ ẩm KK</div>
+    <div id="hum" class="sensor-value">- %</div>
+  </div>
+  <div class="card text-center">
+    <div>🚿 Dòng chảy</div>
+    <div id="flow" class="sensor-value">-</div>
+  </div>
+  <div class="card text-center">
+    <div>📉 Min Threshold</div>
+    <div id="min_val" class="sensor-value">- %</div>
+  </div>
+  <div class="card text-center">
+    <div>📈 Max Threshold</div>
+    <div id="max_val" class="sensor-value">- %</div>
+  </div>
+  <div class="card text-center">
+    <div>⏱️ Thời gian tưới tiếp theo</div>
+    <div id="next_time" class="sensor-value">- phút</div>
+  </div>
+  <div class="card text-center">
+    <div>💡 Chế độ</div>
+    <div id="mode" class="sensor-value">-</div>
+  </div>
+  <div class="card text-center">
+    <div>🚰 Bơm</div>
+    <div id="pump" class="sensor-value">-</div>
+  </div>
+</div>
+
+<!-- Control -->
+<div class="grid grid-cols-2 gap-4 w-full max-w-md">
+  <button id="modeBtn" class="btn btn-red">Đổi chế độ</button>
+  <button id="pumpBtn" class="btn btn-green">Bật/Tắt Bơm</button>
 </div>
 
 <script>
 const API_BASE = "https://iot-server-yc6r.onrender.com";
 
-async function fetchLatestData() {
+async function fetchData() {
   try {
-    // Lấy dữ liệu sensor
     const sensorRes = await fetch(`${API_BASE}/api/data`);
-    const sensorData = await sensorRes.json();
-    const sensor = sensorData[0] || {};
+    const sensor = await sensorRes.json();
 
-    // Lấy trạng thái hệ thống
     const statusRes = await fetch(`${API_BASE}/api/status`);
     const status = await statusRes.json();
-async function fetchStatus(){
-  try{
-    const res = await fetch('/api/status');
-    const data = await res.json();
-    document.getElementById('min').innerText = data.min_val;
-    document.getElementById('max').innerText = data.max_val;
-    document.getElementById('next').innerText = data.next_time+' phút';
-    document.getElementById('modeSelect').value = data.mode;
-    document.getElementById('flow').innerText = data.pump ? '1' : '0';
-  }catch(e){console.error(e);}
-}
 
-    // Cập nhật UI
     document.getElementById('soil').textContent = sensor.soil !== undefined ? sensor.soil + '%' : '-';
     document.getElementById('temp').textContent = sensor.temp !== undefined ? sensor.temp + '°C' : '-';
     document.getElementById('hum').textContent = sensor.hum !== undefined ? sensor.hum + '%' : '-';
     document.getElementById('flow').textContent = sensor.flow !== undefined ? sensor.flow : '-';
-    
+
     document.getElementById('min_val').textContent = status.min_val !== undefined ? status.min_val + '%' : '-';
     document.getElementById('max_val').textContent = status.max_val !== undefined ? status.max_val + '%' : '-';
     document.getElementById('next_time').textContent = status.next_time !== undefined ? status.next_time + ' phút' : '-';
-    
+
     document.getElementById('mode').textContent = status.mode || '-';
     document.getElementById('pump').textContent = status.pump ? 'BẬT' : 'TẮT';
   } catch(err) {
-    console.error('Fetch error:', err);
+    console.error(err);
   }
-async function fetchSensor(){
-  try{
-    const res = await fetch('/api/data');
-    const d = await res.json();
-    document.getElementById('soil').innerText = d.soil+'%';
-    document.getElementById('temp').innerText = d.temp+'°C';
-    document.getElementById('hum').innerText = d.hum+'%';
-  }catch(e){console.error(e);}
 }
 
-// ================= Điều khiển từ UI =================
 document.getElementById('pumpBtn').addEventListener('click', async () => {
-  const currentPump = document.getElementById('pump').textContent === 'BẬT';
+  const pumpState = document.getElementById('pump').textContent === 'BẬT';
   const mode = document.getElementById('mode').textContent || 'AUTO';
   await fetch(`${API_BASE}/api/control`, {
-async function controlPump(state){
-  await fetch('/api/control',{
-    method:'POST',
-    headers:{ 'Content-Type':'application/json' },
-    body: JSON.stringify({ pump: !currentPump, mode })
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({pump:state, mode:document.getElementById('modeSelect').value})
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ pump: !pumpState, mode })
   });
-  fetchLatestData();
+  fetchData();
 });
-}
 
 document.getElementById('modeBtn').addEventListener('click', async () => {
   const modes = ['AUTO','MANUAL','SCHEDULE','SLEEP'];
-  let currentMode = document.getElementById('mode').textContent;
-  let nextMode = modes[(modes.indexOf(currentMode) + 1) % modes.length];
-  const pump = document.getElementById('pump').textContent === 'BẬT';
+  const currentMode = document.getElementById('mode').textContent;
+  const nextMode = modes[(modes.indexOf(currentMode) + 1) % modes.length];
+  const pumpState = document.getElementById('pump').textContent === 'BẬT';
   await fetch(`${API_BASE}/api/control`, {
-async function controlMode(mode){
-  await fetch('/api/control',{
-    method:'POST',
-    headers:{ 'Content-Type':'application/json' },
-    body: JSON.stringify({ pump, mode: nextMode })
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({pump:document.getElementById('flow').innerText=='1', mode:mode})
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ pump: pumpState, mode: nextMode })
   });
-  fetchLatestData();
+  fetchData();
 });
-}
 
-// ================= Auto refresh =================
-setInterval(fetchLatestData, 1000); // mỗi 1s lấy dữ liệu mới
-fetchLatestData(); // gọi ngay khi load
-// refresh mỗi 2s
-setInterval(fetchSensor,2000);
-setInterval(fetchStatus,2000);
+setInterval(fetchData, 5000);
+fetchData();
 </script>
+
 </body>
 </html>
