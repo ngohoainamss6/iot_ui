@@ -2,34 +2,120 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🌿 IoT Smart Garden Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Hệ thống tưới cây</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; margin:0; padding:20px; }
+    h1 { text-align:center; }
+    .container { display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:15px; }
+    .box { background:#fff; padding:15px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1); text-align:center; }
+    .value { font-size: 1.5em; margin:10px 0; }
+    button { padding:8px 15px; margin:5px; border:none; border-radius:5px; cursor:pointer; }
+    button#pumpBtn { background:#4CAF50; color:white; }
+    button#modeBtn { background:#2196F3; color:white; }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
-
-  <h1 class="text-3xl font-bold mb-6">🌱 IoT Smart Garden Dashboard</h1>
-
-  <!-- Sensor boxes -->
-  <div id="sensor-boxes" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-6xl mb-6"></div>
-
-  <!-- Control Panel -->
-  <div class="bg-white p-6 rounded-lg shadow w-full max-w-md">
-    <h2 class="text-xl font-semibold mb-4">🕹️ Control Panel</h2>
-    <div class="flex justify-between items-center mb-4">
-      <span class="font-medium">Chế độ:</span>
-      <button id="toggleMode" class="px-4 py-2 rounded bg-gray-400 text-black">Loading...</button>
+<body>
+  <h1>🌱 Hệ thống tưới cây</h1>
+  <div class="container">
+    <div class="box">
+      <div>🌿 Độ ẩm đất</div>
+      <div id="soil" class="value">- %</div>
     </div>
-    <div class="flex justify-between items-center">
-      <span class="font-medium">Bơm:</span>
-      <button id="togglePump" class="px-4 py-2 rounded bg-gray-400 text-black">Loading...</button>
+    <div class="box">
+      <div>🌤 Nhiệt độ</div>
+      <div id="temp" class="value">- °C</div>
+    </div>
+    <div class="box">
+      <div>💧 Độ ẩm KK</div>
+      <div id="hum" class="value">- %</div>
+    </div>
+    <div class="box">
+      <div>🚿 Dòng chảy</div>
+      <div id="flow" class="value">-</div>
+    </div>
+    <div class="box">
+      <div>📉 Min Threshold</div>
+      <div id="min_val" class="value">- %</div>
+    </div>
+    <div class="box">
+      <div>📈 Max Threshold</div>
+      <div id="max_val" class="value">- %</div>
+    </div>
+    <div class="box">
+      <div>⏱️ Thời gian tưới tiếp theo</div>
+      <div id="next_time" class="value">- phút</div>
+    </div>
+    <div class="box">
+      <div>💡 Chế độ</div>
+      <div id="mode" class="value">-</div>
+      <button id="modeBtn">Đổi chế độ</button>
+    </div>
+    <div class="box">
+      <div>🚰 Bơm</div>
+      <div id="pump" class="value">-</div>
+      <button id="pumpBtn">Bật/Tắt</button>
     </div>
   </div>
 
-  <footer class="mt-6 text-gray-500 text-sm">
-    🔄 Dữ liệu tự động cập nhật mỗi 5 giây.
-  </footer>
+<script>
+const API_BASE = "https://iot-server-yc6r.onrender.com";
 
-  <script src="script.js"></script>
+async function fetchLatestData() {
+  try {
+    // Lấy dữ liệu sensor
+    const sensorRes = await fetch(`${API_BASE}/api/data`);
+    const sensorData = await sensorRes.json();
+    const sensor = sensorData[0] || {};
+
+    // Lấy trạng thái hệ thống
+    const statusRes = await fetch(`${API_BASE}/api/status`);
+    const status = await statusRes.json();
+
+    // Cập nhật UI
+    document.getElementById('soil').textContent = sensor.soil !== undefined ? sensor.soil + '%' : '-';
+    document.getElementById('temp').textContent = sensor.temp !== undefined ? sensor.temp + '°C' : '-';
+    document.getElementById('hum').textContent = sensor.hum !== undefined ? sensor.hum + '%' : '-';
+    document.getElementById('flow').textContent = sensor.flow !== undefined ? sensor.flow : '-';
+    
+    document.getElementById('min_val').textContent = status.min_val !== undefined ? status.min_val + '%' : '-';
+    document.getElementById('max_val').textContent = status.max_val !== undefined ? status.max_val + '%' : '-';
+    document.getElementById('next_time').textContent = status.next_time !== undefined ? status.next_time + ' phút' : '-';
+    
+    document.getElementById('mode').textContent = status.mode || '-';
+    document.getElementById('pump').textContent = status.pump ? 'BẬT' : 'TẮT';
+  } catch(err) {
+    console.error('Fetch error:', err);
+  }
+}
+
+// ================= Điều khiển từ UI =================
+document.getElementById('pumpBtn').addEventListener('click', async () => {
+  const currentPump = document.getElementById('pump').textContent === 'BẬT';
+  const mode = document.getElementById('mode').textContent || 'AUTO';
+  await fetch(`${API_BASE}/api/control`, {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({ pump: !currentPump, mode })
+  });
+  fetchLatestData();
+});
+
+document.getElementById('modeBtn').addEventListener('click', async () => {
+  const modes = ['AUTO','MANUAL','SCHEDULE','SLEEP'];
+  let currentMode = document.getElementById('mode').textContent;
+  let nextMode = modes[(modes.indexOf(currentMode) + 1) % modes.length];
+  const pump = document.getElementById('pump').textContent === 'BẬT';
+  await fetch(`${API_BASE}/api/control`, {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({ pump, mode: nextMode })
+  });
+  fetchLatestData();
+});
+
+// ================= Auto refresh =================
+setInterval(fetchLatestData, 1000); // mỗi 1s lấy dữ liệu mới
+fetchLatestData(); // gọi ngay khi load
+</script>
 </body>
 </html>
