@@ -103,23 +103,24 @@ pumpSwitch.addEventListener('change', async () => {
   pumpStatusText.textContent = newState ? "Đang bật..." : "Đang tắt...";
   try {
     const res = await fetch(`${API_BASE}/api/control`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pump: newState })
     });
     const data = await res.json();
-    if (data.status === "success") {
+    if (data.status === 'success') {
       pumpStatusText.textContent = newState ? "BẬT" : "TẮT";
     } else {
-      pumpSwitch.checked = !newState;
-      pumpStatusText.textContent = "❌ Lỗi!";
+      throw new Error('Server error');
     }
-  } catch(err){
+  } catch (err) {
     console.error(err);
+    // Chỉ rollback nếu thật sự lỗi
     pumpSwitch.checked = !newState;
-    pumpStatusText.textContent = "❌ Lỗi mạng!";
+    pumpStatusText.textContent = "❌ Lỗi mạng hoặc server";
   }
 });
+
 
 function updatePumpUI(pump){
   pumpSwitch.checked = !!pump;
