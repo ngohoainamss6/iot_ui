@@ -1,105 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IoT Garden Dashboard</title>
+  <title>🌿 IoT Smart Garden Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
 
-  <h1 class="text-3xl font-bold mb-6">🌱 IoT Garden Dashboard</h1>
+  <h1 class="text-3xl font-bold mb-6">🌱 IoT Smart Garden Dashboard</h1>
 
   <!-- Sensor boxes -->
-  <div id="sensor-boxes" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-6xl mb-6">
-    <!-- Boxes sẽ được tạo bởi JS -->
-  </div>
+  <div id="sensor-boxes" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-6xl mb-6"></div>
 
   <!-- Control Panel -->
-  <div class="bg-white p-6 rounded-lg shadow w-full max-w-md mb-6">
-    <h2 class="text-xl font-semibold mb-4">Control Panel</h2>
+  <div class="bg-white p-6 rounded-lg shadow w-full max-w-md">
+    <h2 class="text-xl font-semibold mb-4">🕹️ Control Panel</h2>
     <div class="flex justify-between items-center mb-4">
-      <span class="font-medium">Mode:</span>
-      <button id="toggleMode" class="px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600">Loading...</button>
+      <span class="font-medium">Chế độ:</span>
+      <button id="toggleMode" class="px-4 py-2 rounded bg-gray-400 text-black">Loading...</button>
     </div>
     <div class="flex justify-between items-center">
-      <span class="font-medium">Pump:</span>
-      <button id="togglePump" class="px-4 py-2 rounded bg-green-500 text-white hover:bg-green-600">Loading...</button>
+      <span class="font-medium">Bơm:</span>
+      <button id="togglePump" class="px-4 py-2 rounded bg-gray-400 text-black">Loading...</button>
     </div>
   </div>
 
-  <script>
-    const sensorBoxes = document.getElementById("sensor-boxes");
-    const toggleModeBtn = document.getElementById("toggleMode");
-    const togglePumpBtn = document.getElementById("togglePump");
-
-    let systemStatus = {};
-
-    // Hàm hiển thị sensor data
-    function renderSensorData(data) {
-      sensorBoxes.innerHTML = "";
-      const latest = data[0] || {};
-      const sensors = [
-        { name: "Soil", value: latest.soil, unit: "%" },
-        { name: "Temperature", value: latest.temp, unit: "°C" },
-        { name: "Humidity", value: latest.hum, unit: "%" },
-        { name: "Flow", value: latest.flow, unit: "" }
-      ];
-
-      sensors.forEach(s => {
-        const box = document.createElement("div");
-        box.className = "bg-white p-4 rounded-lg shadow flex flex-col items-center justify-center";
-        box.innerHTML = `
-          <span class="text-gray-500">${s.name}</span>
-          <span class="text-2xl font-bold">${s.value ?? "-"}</span>
-          <span class="text-gray-400">${s.unit}</span>
-        `;
-        sensorBoxes.appendChild(box);
-      });
-    }
-
-    // Hàm cập nhật trạng thái hệ thống
-    async function fetchStatus() {
-      const res = await fetch("/api/status");
-      systemStatus = await res.json();
-      toggleModeBtn.textContent = systemStatus.mode;
-      togglePumpBtn.textContent = systemStatus.pump ? "ON" : "OFF";
-    }
-
-    // Hàm lấy dữ liệu sensor mới nhất
-    async function fetchData() {
-      const res = await fetch("/api/data");
-      const data = await res.json();
-      renderSensorData(data);
-    }
-
-    // Hàm gửi lệnh điều khiển
-    async function sendControl(action, value) {
-      await fetch("/api/control", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({action, value})
-      });
-      await fetchStatus();
-    }
-
-    // Event listener cho các nút
-    toggleModeBtn.addEventListener("click", () => {
-      const newMode = systemStatus.mode === "AUTO" ? "MANUAL" : "AUTO";
-      sendControl("MODE", newMode);
-    });
-
-    togglePumpBtn.addEventListener("click", () => {
-      const newPump = systemStatus.pump ? "OFF" : "ON";
-      sendControl("PUMP", newPump);
-    });
-
-    // Auto-refresh
-    fetchStatus();
-    fetchData();
-    setInterval(fetchStatus, 5000);
-    setInterval(fetchData, 5000);
-  </script>
-
+  <script src="script.js"></script>
 </body>
 </html>
