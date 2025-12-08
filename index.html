@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🌱 IoT Smart Garden Dashboard</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
 <style>
 body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
 .card { border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); margin-bottom: 20px; text-align:center; padding:20px;}
@@ -40,19 +39,20 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
   <div class="col-md-4">
     <div class="card p-3 text-center">
       <div>💡 Chế độ</div>
-      <div class="sensor-value" id="mode">-</div>
-      <div class="btn-group mt-2">
-        <button class="btn btn-primary" id="modeBtn">Đổi chế độ</button>
-      </div>
+      <select id="modeSelect" class="form-select mt-2">
+        <option value="AUTO">AUTO</option>
+        <option value="MANUAL">MANUAL</option>
+        <option value="SCHEDULE">SCHEDULE</option>
+        <option value="SLEEP">SLEEP</option>
+      </select>
+      <button class="btn btn-primary mt-2" id="modeApply">Áp dụng</button>
     </div>
   </div>
   <div class="col-md-4">
     <div class="card p-3 text-center">
       <div>🚰 Bơm</div>
       <div class="sensor-value" id="pump">-</div>
-      <div class="btn-group mt-2">
-        <button class="btn btn-success" id="pumpBtn">Bật/Tắt</button>
-      </div>
+      <button class="btn btn-success mt-2" id="pumpBtn">Bật/Tắt</button>
     </div>
   </div>
   <div class="col-md-4">
@@ -83,7 +83,6 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
 <script>
 const API_BASE = "https://iot-server-yc6r.onrender.com";
 
-// FETCH DATA
 async function fetchData() {
   try {
     const sensorRes = await fetch(`${API_BASE}/api/data`);
@@ -98,54 +97,53 @@ async function fetchData() {
     document.getElementById('min_val').textContent = status.min_val ?? '- %';
     document.getElementById('max_val').textContent = status.max_val ?? '- %';
     document.getElementById('next_time').textContent = status.next_time ?? '- phút';
-    document.getElementById('mode').textContent = status.mode ?? '-';
     document.getElementById('pump').textContent = status.pump ? 'BẬT' : 'TẮT';
     document.getElementById('pumpPower').value = status.pump_power ?? 36;
-    document.getElementById('pumpPowerLabel').textContent = (status.pump_power ?? 36) + '%';
+    document.getElementById('pumpPowerLabel').textContent = (status.pump_power ?? 36)+'%';
+    document.getElementById('modeSelect').value = status.mode ?? 'AUTO';
     updateScheduleUI(status.schedules ?? []);
   } catch(err){ console.error(err); }
 }
 
-// CONTROL BUTTONS
+// BẬT/TẮT bơm
 document.getElementById('pumpBtn').addEventListener('click', async ()=>{
   const pumpState = document.getElementById('pump').textContent === 'BẬT';
-  const mode = document.getElementById('mode').textContent || 'AUTO';
+  const mode = document.getElementById('modeSelect').value;
   await fetch(`${API_BASE}/api/control`, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ pump: !pumpState, mode })
+    body: JSON.stringify({pump: !pumpState, mode})
   });
   fetchData();
 });
 
-document.getElementById('modeBtn').addEventListener('click', async ()=>{
-  const modes = ['AUTO','MANUAL','SCHEDULE','SLEEP'];
-  const currentMode = document.getElementById('mode').textContent;
-  const nextMode = modes[(modes.indexOf(currentMode)+1)%modes.length];
+// ÁP DỤNG mode
+document.getElementById('modeApply').addEventListener('click', async ()=>{
+  const mode = document.getElementById('modeSelect').value;
   const pumpState = document.getElementById('pump').textContent === 'BẬT';
   await fetch(`${API_BASE}/api/control`, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ pump: pumpState, mode: nextMode })
+    body: JSON.stringify({mode, pump: pumpState})
   });
   fetchData();
 });
 
-// PUMP POWER
+// Công suất bơm
 const pumpPowerInput = document.getElementById('pumpPower');
-pumpPowerInput.addEventListener('input', () => {
-  document.getElementById('pumpPowerLabel').textContent = pumpPowerInput.value + '%';
+pumpPowerInput.addEventListener('input', ()=> {
+  document.getElementById('pumpPowerLabel').textContent = pumpPowerInput.value+'%';
 });
-pumpPowerInput.addEventListener('change', async () => {
+pumpPowerInput.addEventListener('change', async ()=>{
   await fetch(`${API_BASE}/api/control`, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ pump_power: parseInt(pumpPowerInput.value) })
+    body: JSON.stringify({pump_power: parseInt(pumpPowerInput.value)})
   });
   fetchData();
 });
 
-// SCHEDULE
+// Lịch tưới
 function updateScheduleUI(schedules){
   const list = document.getElementById('scheduleList');
   list.innerHTML = '';
@@ -157,27 +155,23 @@ function updateScheduleUI(schedules){
     list.appendChild(div);
   });
 }
-
-async function addSchedule(){
+document.getElementById('addScheduleBtn').addEventListener('click', async ()=>{
   const val = document.getElementById('scheduleTime').value;
   if(!val) return;
   const [hour,minute] = val.split(':').map(Number);
   await fetch(`${API_BASE}/api/control`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ add_schedule: {hour,minute} })
+    body:JSON.stringify({add_schedule:{hour,minute}})
   });
   fetchData();
   document.getElementById('scheduleTime').value='';
-}
-
-document.getElementById('addScheduleBtn').addEventListener('click', addSchedule);
-
+});
 async function removeSchedule(index){
   await fetch(`${API_BASE}/api/control`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ remove_schedule: index })
+    body:JSON.stringify({remove_schedule:index})
   });
   fetchData();
 }
