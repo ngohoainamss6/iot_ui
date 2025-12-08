@@ -33,6 +33,11 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
   <div class="col-md-3"><div class="card"><div>📈 Max Threshold</div><div class="sensor-value" id="max_val">- %</div></div></div>
 </div>
 
+<div class="row g-3 mb-3">
+  <div class="col-md-3"><div class="card"><div>🚿 Dòng chảy</div><div class="sensor-value" id="flow">-</div></div></div>
+  <div class="col-md-3"><div class="card"><div>⏱️ Thời gian tưới tiếp theo</div><div class="sensor-value" id="next_time">- phút</div></div></div>
+</div>
+
 <!-- CONTROL PANEL -->
 <div class="row g-3 mt-3">
   <div class="col-md-4">
@@ -121,7 +126,7 @@ async function fetchData() {
   } catch(err){ console.error(err); }
 }
 
-// ================= Bật/Tắt bơm (chỉ gửi lệnh) =================
+// ================= Bật/Tắt bơm =================
 document.getElementById('pumpBtn').addEventListener('click', async ()=>{
   const mode = document.getElementById('modeSelect').value;
   await fetch(`${API_BASE}/api/control`, {
