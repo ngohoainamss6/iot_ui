@@ -26,7 +26,7 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
 
 <div class="row g-3 mb-3">
   <div class="col-md-3"><div class="card"><div>Chế độ hiện tại</div><div class="sensor-value" id="currentMode">-</div></div></div>
-  <div class="col-md-3"><div class="card"><div>Bơm hiện tại</div><div class="sensor-value" id="currentPump">-</div></div></div>
+  <div class="col-md-3"><div class="card"><div>Bơm hiện tại</div><div class="sensor-value" id="pumpStatusText">-</div></div></div>
   <div class="col-md-3"><div class="card"><div>📉 Min Threshold</div><div class="sensor-value" id="min_val">- %</div></div></div>
   <div class="col-md-3"><div class="card"><div>📈 Max Threshold</div><div class="sensor-value" id="max_val">- %</div></div></div>
 </div>
@@ -49,12 +49,16 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
       <button class="btn btn-primary mt-2" id="modeApply">Gửi lệnh</button>
     </div>
   </div>
+
   <div class="col-md-4">
     <div class="card p-3 text-center">
       <div>🚰 Bật/Tắt bơm</div>
-      <button class="btn btn-success mt-2" id="pumpBtn">Gửi lệnh</button>
+      <div class="form-check form-switch d-flex justify-content-center mt-3">
+        <input class="form-check-input" type="checkbox" id="pumpSwitch" style="transform: scale(1.8); cursor:pointer;">
+      </div>
     </div>
   </div>
+
   <div class="col-md-4">
     <div class="card p-3 text-center">
       <div>⚡ Công suất bơm (%)</div>
@@ -90,7 +94,39 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
 <script>
 const API_BASE = "https://iot-server-yc6r.onrender.com";
 
-// ================= Fetch dữ liệu =================
+// =============== SWITCH BƠM ===============
+const pumpSwitch = document.getElementById('pumpSwitch');
+const pumpStatusText = document.getElementById('pumpStatusText');
+
+pumpSwitch.addEventListener('change', async () => {
+  const newState = pumpSwitch.checked;
+  pumpStatusText.textContent = newState ? "Đang bật..." : "Đang tắt...";
+  try {
+    const res = await fetch(`${API_BASE}/api/control`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ pump: newState })
+    });
+    const data = await res.json();
+    if (data.status === "success") {
+      pumpStatusText.textContent = newState ? "BẬT" : "TẮT";
+    } else {
+      pumpSwitch.checked = !newState;
+      pumpStatusText.textContent = "❌ Lỗi!";
+    }
+  } catch(err){
+    console.error(err);
+    pumpSwitch.checked = !newState;
+    pumpStatusText.textContent = "❌ Lỗi mạng!";
+  }
+});
+
+function updatePumpUI(pump){
+  pumpSwitch.checked = !!pump;
+  pumpStatusText.textContent = pump ? "BẬT" : "TẮT";
+}
+
+// =============== FETCH DỮ LIỆU ===============
 async function fetchData() {
   try {
     const sensorRes = await fetch(`${API_BASE}/api/data`);
@@ -104,12 +140,12 @@ async function fetchData() {
     document.getElementById('flow').textContent = sensor.flow ?? '-';
 
     document.getElementById('currentMode').textContent = status.mode ?? '-';
-    document.getElementById('currentPump').textContent = status.pump ? 'BẬT' : 'TẮT';
     document.getElementById('min_val').textContent = status.min_val ?? '- %';
     document.getElementById('max_val').textContent = status.max_val ?? '- %';
     document.getElementById('next_time').textContent = status.next_time ?? '- phút';
     document.getElementById('pumpPower').value = status.pump_power ?? 36;
     document.getElementById('pumpPowerLabel').textContent = (status.pump_power ?? 36)+'%';
+    updatePumpUI(status.pump);
     updateScheduleUI(Array.isArray(status.schedules) ? status.schedules : []);
 
     const cmdRes = await fetch(`${API_BASE}/api/command`);
@@ -118,17 +154,7 @@ async function fetchData() {
   } catch(err){ console.error(err); }
 }
 
-// ================= Bật/Tắt bơm =================
-document.getElementById('pumpBtn').addEventListener('click', async ()=>{
-  const currentPumpState = document.getElementById('currentPump').textContent === 'BẬT';
-  await fetch(`${API_BASE}/api/control`, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ pump: !currentPumpState })
-  });
-});
-
-// ================= Áp dụng chế độ =================
+// =============== MODE ===============
 document.getElementById('modeApply').addEventListener('click', async ()=>{
   const mode = document.getElementById('modeSelect').value;
   await fetch(`${API_BASE}/api/control`, {
@@ -138,7 +164,7 @@ document.getElementById('modeApply').addEventListener('click', async ()=>{
   });
 });
 
-// ================= Công suất bơm =================
+// =============== CÔNG SUẤT ===============
 const pumpPowerInput = document.getElementById('pumpPower');
 pumpPowerInput.addEventListener('input', ()=> {
   document.getElementById('pumpPowerLabel').textContent = pumpPowerInput.value+'%';
@@ -151,7 +177,7 @@ pumpPowerInput.addEventListener('change', async ()=>{
   });
 });
 
-// ================= Lịch tưới =================
+// =============== LỊCH TƯỚI ===============
 function updateScheduleUI(schedules){
   const list = document.getElementById('scheduleList');
   list.innerHTML = '';
@@ -182,7 +208,7 @@ async function removeSchedule(index){
   });
 }
 
-// ================= Auto-refresh =================
+// =============== AUTO REFRESH ===============
 setInterval(fetchData,2000);
 fetchData();
 </script>
