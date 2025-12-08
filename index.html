@@ -25,11 +25,16 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
   <div class="col-md-4"><div class="card gradient-card3"><div>💧 Độ ẩm KK</div><div class="sensor-value" id="hum">- %</div></div></div>
 </div>
 
-<!-- SYSTEM STATUS -->
+<!-- SYSTEM STATUS HIỆN TẠI -->
 <div class="row g-3 mb-3">
-  <div class="col-md-3"><div class="card"><div>🚿 Dòng chảy</div><div class="sensor-value" id="flow">-</div></div></div>
+  <div class="col-md-3"><div class="card"><div>Chế độ hiện tại</div><div class="sensor-value" id="currentMode">-</div></div></div>
+  <div class="col-md-3"><div class="card"><div>Bơm hiện tại</div><div class="sensor-value" id="currentPump">-</div></div></div>
   <div class="col-md-3"><div class="card"><div>📉 Min Threshold</div><div class="sensor-value" id="min_val">- %</div></div></div>
   <div class="col-md-3"><div class="card"><div>📈 Max Threshold</div><div class="sensor-value" id="max_val">- %</div></div></div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-3"><div class="card"><div>🚿 Dòng chảy</div><div class="sensor-value" id="flow">-</div></div></div>
   <div class="col-md-3"><div class="card"><div>⏱️ Thời gian tưới tiếp theo</div><div class="sensor-value" id="next_time">- phút</div></div></div>
 </div>
 
@@ -37,21 +42,20 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
 <div class="row g-3 mt-3">
   <div class="col-md-4">
     <div class="card p-3 text-center">
-      <div>💡 Chế độ</div>
+      <div>💡 Chọn chế độ</div>
       <select id="modeSelect" class="form-select mt-2">
         <option value="AUTO">AUTO</option>
         <option value="MANUAL">MANUAL</option>
         <option value="SCHEDULE">SCHEDULE</option>
         <option value="SLEEP">SLEEP</option>
       </select>
-      <button class="btn btn-primary mt-2" id="modeApply">Áp dụng</button>
+      <button class="btn btn-primary mt-2" id="modeApply">Gửi lệnh</button>
     </div>
   </div>
   <div class="col-md-4">
     <div class="card p-3 text-center">
-      <div>🚰 Bơm</div>
-      <div class="sensor-value" id="pump">-</div>
-      <button class="btn btn-success mt-2" id="pumpBtn">Bật/Tắt</button>
+      <div>🚰 Bật/Tắt bơm</div>
+      <button class="btn btn-success mt-2" id="pumpBtn">Gửi lệnh</button>
     </div>
   </div>
   <div class="col-md-4">
@@ -82,7 +86,7 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
   <div class="col-md-12">
     <div class="card p-3">
       <h5>Lệnh chờ ESP thực hiện</h5>
-      <div id="commandList"></div>
+      <div id="commandList">-</div>
     </div>
   </div>
 </div>
@@ -92,6 +96,7 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
 <script>
 const API_BASE = "https://iot-server-yc6r.onrender.com";
 
+// ================= Fetch dữ liệu =================
 async function fetchData() {
   try {
     const sensorRes = await fetch(`${API_BASE}/api/data`);
@@ -99,58 +104,51 @@ async function fetchData() {
     const statusRes = await fetch(`${API_BASE}/api/status`);
     const status = await statusRes.json();
 
+    // Cập nhật sensor
     document.getElementById('soil').textContent = sensor.soil ?? '- %';
     document.getElementById('temp').textContent = sensor.temp ?? '- °C';
     document.getElementById('hum').textContent = sensor.hum ?? '- %';
     document.getElementById('flow').textContent = sensor.flow ?? '-';
+
+    // Hiển thị trạng thái thực tế
+    document.getElementById('currentMode').textContent = status.mode ?? '-';
+    document.getElementById('currentPump').textContent = status.pump ? 'BẬT' : 'TẮT';
     document.getElementById('min_val').textContent = status.min_val ?? '- %';
     document.getElementById('max_val').textContent = status.max_val ?? '- %';
     document.getElementById('next_time').textContent = status.next_time ?? '- phút';
-    document.getElementById('pump').textContent = status.pump ? 'BẬT' : 'TẮT';
     document.getElementById('pumpPower').value = status.pump_power ?? 36;
     document.getElementById('pumpPowerLabel').textContent = (status.pump_power ?? 36)+'%';
-    document.getElementById('modeSelect').value = status.mode ?? 'AUTO';
     updateScheduleUI(Array.isArray(status.schedules) ? status.schedules : []);
 
-    // Load lệnh pending
-    const cmdRes = await fetch(`${API_BASE}/api/commands`);
-    const cmds = await cmdRes.json();
-    const cmdList = document.getElementById('commandList');
-    cmdList.innerHTML = '';
-    cmds.forEach(c=>{
-      const div = document.createElement('div');
-      div.textContent = `Mode: ${c.mode}, Pump: ${c.pump?'ON':'OFF'}, Power: ${c.pump_power}%`;
-      cmdList.appendChild(div);
-    });
+    // Lấy lệnh pending (ESP chưa thực hiện)
+    const cmdRes = await fetch(`${API_BASE}/api/command`);
+    const cmdStr = await cmdRes.text();
+    document.getElementById('commandList').textContent = cmdStr || '-';
 
   } catch(err){ console.error(err); }
 }
 
-// BẬT/TẮT bơm
+// ================= Bật/Tắt bơm (chỉ gửi lệnh) =================
 document.getElementById('pumpBtn').addEventListener('click', async ()=>{
-  const pumpState = document.getElementById('pump').textContent === 'BẬT';
   const mode = document.getElementById('modeSelect').value;
   await fetch(`${API_BASE}/api/control`, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({pump: !pumpState, mode})
+    body: JSON.stringify({pump:null, mode})
   });
-  fetchData();
 });
 
-// ÁP DỤNG mode
+// ================= Áp dụng chế độ =================
 document.getElementById('modeApply').addEventListener('click', async ()=>{
   const mode = document.getElementById('modeSelect').value;
-  const pumpState = document.getElementById('pump').textContent === 'BẬT';
   await fetch(`${API_BASE}/api/control`, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({mode, pump: pumpState})
+    body: JSON.stringify({mode, pump:null})
   });
-  fetchData();
 });
 
-// Công suất bơm
+// ================= Công suất bơm =================
 const pumpPowerInput = document.getElementById('pumpPower');
 pumpPowerInput.addEventListener('input', ()=> {
   document.getElementById('pumpPowerLabel').textContent = pumpPowerInput.value+'%';
@@ -161,10 +159,9 @@ pumpPowerInput.addEventListener('change', async ()=>{
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({pump_power: parseInt(pumpPowerInput.value)})
   });
-  fetchData();
 });
 
-// Lịch tưới
+// ================= Lịch tưới =================
 function updateScheduleUI(schedules){
   const list = document.getElementById('scheduleList');
   list.innerHTML = '';
@@ -185,18 +182,18 @@ document.getElementById('addScheduleBtn').addEventListener('click', async ()=>{
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({add_schedule:{hour,minute}})
   });
-  fetchData();
   document.getElementById('scheduleTime').value='';
 });
+
 async function removeSchedule(index){
   await fetch(`${API_BASE}/api/control`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({remove_schedule:index})
   });
-  fetchData();
 }
 
+// ================= Auto-refresh =================
 setInterval(fetchData,2000);
 fetchData();
 </script>
