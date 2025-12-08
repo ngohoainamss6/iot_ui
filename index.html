@@ -16,7 +16,6 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
 </head>
 <body>
 <div class="container py-4">
-
 <h1 class="fw-bold text-center mb-4">🌱 IoT Smart Garden Dashboard</h1>
 
 <!-- SENSOR DATA -->
@@ -78,6 +77,16 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
   </div>
 </div>
 
+<!-- COMMAND QUEUE -->
+<div class="row g-3 mt-3">
+  <div class="col-md-12">
+    <div class="card p-3">
+      <h5>Lệnh chờ ESP thực hiện</h5>
+      <div id="commandList"></div>
+    </div>
+  </div>
+</div>
+
 </div>
 
 <script>
@@ -101,7 +110,19 @@ async function fetchData() {
     document.getElementById('pumpPower').value = status.pump_power ?? 36;
     document.getElementById('pumpPowerLabel').textContent = (status.pump_power ?? 36)+'%';
     document.getElementById('modeSelect').value = status.mode ?? 'AUTO';
-    updateScheduleUI(status.schedules ?? []);
+    updateScheduleUI(Array.isArray(status.schedules) ? status.schedules : []);
+
+    // Load lệnh pending
+    const cmdRes = await fetch(`${API_BASE}/api/commands`);
+    const cmds = await cmdRes.json();
+    const cmdList = document.getElementById('commandList');
+    cmdList.innerHTML = '';
+    cmds.forEach(c=>{
+      const div = document.createElement('div');
+      div.textContent = `Mode: ${c.mode}, Pump: ${c.pump?'ON':'OFF'}, Power: ${c.pump_power}%`;
+      cmdList.appendChild(div);
+    });
+
   } catch(err){ console.error(err); }
 }
 
