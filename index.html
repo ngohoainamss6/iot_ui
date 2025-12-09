@@ -18,7 +18,6 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
 <div class="container py-4">
 <h1 class="fw-bold text-center mb-4">🌱 IoT Smart Garden Dashboard</h1>
 
-<!-- Dữ liệu cảm biến -->
 <div class="row g-3 mb-3">
   <div class="col-md-4"><div class="card gradient-card"><div>🌿 Độ ẩm đất</div><div class="sensor-value" id="soil">- %</div></div></div>
   <div class="col-md-4"><div class="card gradient-card2"><div>🌤 Nhiệt độ</div><div class="sensor-value" id="temp">- °C</div></div></div>
@@ -37,7 +36,6 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
   <div class="col-md-3"><div class="card"><div>⏱️ Thời gian tưới tiếp theo</div><div class="sensor-value" id="next_time">- phút</div></div></div>
 </div>
 
-<!-- Điều khiển -->
 <div class="row g-3 mt-3">
   <div class="col-md-4">
     <div class="card p-3 text-center">
@@ -70,7 +68,6 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
   </div>
 </div>
 
-<!-- Lịch tưới -->
 <div class="row g-3 mt-3">
   <div class="col-md-12">
     <div class="card p-3">
@@ -84,7 +81,6 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
   </div>
 </div>
 
-<!-- Lệnh chờ ESP -->
 <div class="row g-3 mt-3">
   <div class="col-md-12">
     <div class="card p-3">
@@ -93,17 +89,96 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
     </div>
   </div>
 </div>
-
 </div>
 
 <script>
 const API_BASE = "https://iot-server-yc6r.onrender.com";
 
-// ======== Hàm update UI ========
+// =============== SWITCH BƠM ===============
+const pumpSwitch = document.getElementById('pumpSwitch');
+const pumpStatusText = document.getElementById('pumpStatusText');
+
+pumpSwitch.addEventListener('change', async () => {
+  const newState = pumpSwitch.checked;
+  pumpStatusText.textContent = newState ? "Đang bật..." : "Đang tắt...";
+  try {
+    const res = await fetch(`${API_BASE}/api/control`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pump: newState })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      pumpStatusText.textContent = newState ? "BẬT" : "TẮT";
+    } else {
+      throw new Error('Server error');
+    }
+  } catch (err) {
+    console.error(err);
+    // Chỉ rollback nếu thật sự lỗi
+    pumpSwitch.checked = !newState;
+    pumpStatusText.textContent = "❌ Lỗi mạng hoặc server";
+  }
+});
+
+
 function updatePumpUI(pump){
   pumpSwitch.checked = !!pump;
   pumpStatusText.textContent = pump ? "BẬT" : "TẮT";
 }
+
+// =============== FETCH DỮ LIỆU ===============
+async function fetchData() {
+  try {
+    const sensorRes = await fetch(`${API_BASE}/api/data`);
+    const sensor = await sensorRes.json();
+    const statusRes = await fetch(`${API_BASE}/api/status`);
+    const status = await statusRes.json();
+
+    document.getElementById('soil').textContent = sensor.soil ?? '- %';
+    document.getElementById('temp').textContent = sensor.temp ?? '- °C';
+    document.getElementById('hum').textContent = sensor.hum ?? '- %';
+    document.getElementById('flow').textContent = sensor.flow ?? '-';
+
+    document.getElementById('currentMode').textContent = status.mode ?? '-';
+    document.getElementById('min_val').textContent = status.min_val ?? '- %';
+    document.getElementById('max_val').textContent = status.max_val ?? '- %';
+    document.getElementById('next_time').textContent = status.next_time ?? '- phút';
+    document.getElementById('pumpPower').value = status.pump_power ?? 36;
+    document.getElementById('pumpPowerLabel').textContent = (status.pump_power ?? 36)+'%';
+    updatePumpUI(status.pump);
+    updateScheduleUI(Array.isArray(status.schedules) ? status.schedules : []);
+
+    const cmdRes = await fetch(`${API_BASE}/api/command`);
+    const cmdStr = await cmdRes.text();
+    document.getElementById('commandList').textContent = cmdStr || '-';
+  } catch(err){ console.error(err); }
+}
+
+// =============== MODE ===============
+document.getElementById('modeApply').addEventListener('click', async ()=>{
+  const mode = document.getElementById('modeSelect').value;
+  await fetch(`${API_BASE}/api/control`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ mode })
+  });
+});
+
+// =============== CÔNG SUẤT ===============
+const pumpPowerInput = document.getElementById('pumpPower');
+pumpPowerInput.addEventListener('input', ()=> {
+  document.getElementById('pumpPowerLabel').textContent = pumpPowerInput.value+'%';
+});
+pumpPowerInput.addEventListener('change', async ()=>{
+  await fetch(`${API_BASE}/api/control`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ pump_power: parseInt(pumpPowerInput.value) })
+  });
+});
+
+// =============== LỊCH TƯỚI ===============
 function updateScheduleUI(schedules){
   const list = document.getElementById('scheduleList');
   list.innerHTML = '';
@@ -115,103 +190,28 @@ function updateScheduleUI(schedules){
     list.appendChild(div);
   });
 }
-
-// ======== FETCH STATUS ========
-async function fetchStatus(){
-  try{
-    const res = await fetch(`${API_BASE}/api/status`);
-    const status = await res.json();
-    document.getElementById('soil').textContent = status.soil ?? '- %';
-    document.getElementById('temp').textContent = status.temp ?? '- °C';
-    document.getElementById('hum').textContent = status.hum ?? '- %';
-    document.getElementById('flow').textContent = status.flow ?? '-';
-    document.getElementById('currentMode').textContent = status.mode ?? '-';
-    document.getElementById('min_val').textContent = status.min_val ?? '- %';
-    document.getElementById('max_val').textContent = status.max_val ?? '- %';
-    document.getElementById('next_time').textContent = status.next_time ?? '- phút';
-    document.getElementById('pumpPower').value = status.pump_power ?? 36;
-    document.getElementById('pumpPowerLabel').textContent = (status.pump_power ?? 36)+'%';
-    updatePumpUI(status.pump);
-    updateScheduleUI(Array.isArray(status.schedules)?status.schedules:[]);
-  }catch(e){ console.error(e); }
-}
-
-// ======== MODE ========
-document.getElementById('modeApply').addEventListener('click', async ()=>{
-  const mode = document.getElementById('modeSelect').value;
-  await fetch(`${API_BASE}/api/mode`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ mode })
-  });
-});
-
-// ======== PUMP ========
-pumpSwitch.addEventListener('change', async ()=>{
-  if(document.getElementById('currentMode').textContent!=='MANUAL'){
-    alert("Chỉ chế độ MANUAL mới bật/tắt bơm");
-    fetchStatus();
-    return;
-  }
-  const newState = pumpSwitch.checked;
-  pumpStatusText.textContent = newState ? "Đang bật..." : "Đang tắt...";
-  try{
-    const res = await fetch(`${API_BASE}/api/pump`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ pump: newState })
-    });
-    const data = await res.json();
-    if(data.status==='success') updatePumpUI(newState);
-    else throw new Error('Server error');
-  }catch(e){ console.error(e); fetchStatus(); }
-});
-
-// ======== PUMP POWER ========
-const pumpPowerInput = document.getElementById('pumpPower');
-pumpPowerInput.addEventListener('input',()=>{ document.getElementById('pumpPowerLabel').textContent = pumpPowerInput.value+'%'; });
-pumpPowerInput.addEventListener('change', async ()=>{
-  await fetch(`${API_BASE}/api/pump_power`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ pump_power: parseInt(pumpPowerInput.value) })
-  });
-});
-
-// ======== SCHEDULE ========
 document.getElementById('addScheduleBtn').addEventListener('click', async ()=>{
   const val = document.getElementById('scheduleTime').value;
   if(!val) return;
   const [hour,minute] = val.split(':').map(Number);
-  await fetch(`${API_BASE}/api/schedule`,{
+  await fetch(`${API_BASE}/api/control`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ add_schedule:{hour,minute} })
+    body:JSON.stringify({add_schedule:{hour,minute}})
   });
   document.getElementById('scheduleTime').value='';
 });
 async function removeSchedule(index){
-  await fetch(`${API_BASE}/api/schedule`,{
+  await fetch(`${API_BASE}/api/control`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ remove_schedule:index })
+    body:JSON.stringify({remove_schedule:index})
   });
 }
 
-// ======== COMMAND LIST ========
-async function fetchCommand(){
-  try{
-    const res = await fetch(`${API_BASE}/api/command`);
-    const str = await res.text();
-    document.getElementById('commandList').textContent = str||'-';
-  }catch(e){ console.error(e); }
-}
-
-// ======== AUTO REFRESH ========
-setInterval(()=>{ fetchStatus(); fetchCommand(); }, 2000);
-fetchStatus();
-fetchCommand();
-
+// =============== AUTO REFRESH ===============
+setInterval(fetchData,2000);
+fetchData();
 </script>
 </body>
 </html>
