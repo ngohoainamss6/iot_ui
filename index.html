@@ -102,6 +102,7 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
             <th>Chế độ</th>
             <th>Bơm</th>
             <th>Công suất</th>
+            <th>Lịch tưới</th>
             <th>Thời gian</th>
           </tr>
         </thead>
@@ -258,6 +259,7 @@ async function fetchHistory() {
           </span>
         </td>
         <td>${item.pump_power ?? '-'}%</td>
+        <td>${item.schedules ?? '-'}%</td>
         <td>${new Date(item.created_at).toLocaleString('vi-VN')}</td>
       `;
       body.appendChild(row);
