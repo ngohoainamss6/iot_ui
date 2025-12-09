@@ -146,7 +146,7 @@ async function fetchData() {
     document.getElementById('next_time').textContent = status.next_time ?? '- phút';
     document.getElementById('pumpPower').value = status.pump_power ?? 36;
     document.getElementById('pumpPowerLabel').textContent = (status.pump_power ?? 36)+'%';
-    updatePumpUI(status.pump);
+ 
     updateScheduleUI(Array.isArray(status.schedules) ? status.schedules : []);
 
     const cmdRes = await fetch(`${API_BASE}/api/command`);
