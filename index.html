@@ -91,6 +91,29 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
 </div>
 </div>
 
+<div class="row g-3 mt-3">
+  <div class="col-md-12">
+    <div class="card p-3">
+      <h5>📜 Lịch sử điều khiển</h5>
+      <table class="table table-striped table-bordered text-center align-middle" id="historyTable">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Chế độ</th>
+            <th>Bơm</th>
+            <th>Công suất</th>
+            <th>Thời gian</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody">
+          <tr><td colspan="5">Đang tải...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
 <script>
 const API_BASE = "https://iot-server-yc6r.onrender.com";
 
@@ -208,6 +231,37 @@ async function removeSchedule(index){
     body:JSON.stringify({remove_schedule:index})
   });
 }
+// =============== LỊCH SỬ ĐIỀU KHIỂN ===============
+async function fetchHistory() {
+  try {
+    const res = await fetch(`${API_BASE}/api/history`);
+    const history = await res.json();
+    const body = document.getElementById('historyBody');
+    body.innerHTML = '';
+
+    if (!Array.isArray(history) || history.length === 0) {
+      body.innerHTML = '<tr><td colspan="5">Chưa có dữ liệu</td></tr>';
+      return;
+    }
+
+    history.forEach(item => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${item.id}</td>
+        <td>${item.mode ?? '-'}</td>
+        <td>${item.pump ? 'BẬT' : 'TẮT'}</td>
+        <td>${item.pump_power ?? '-'}%</td>
+        <td>${new Date(item.created_at).toLocaleString('vi-VN')}</td>
+      `;
+      body.appendChild(row);
+    });
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+
+  
 
 // =============== AUTO REFRESH ===============
 setInterval(fetchData,2000);
