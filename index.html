@@ -259,7 +259,20 @@ async function fetchHistory() {
           </span>
         </td>
         <td>${item.pump_power ?? '-'}%</td>
-        <td>${item.schedules ?? '-'}%</td>
+        <td>
+          ${
+            Array.isArray(item.schedules) && item.schedules.length > 0
+              ? item.schedules
+                  .map(t =>
+                    `${t.hour.toString().padStart(2, '0')}:${t.minute
+                      .toString()
+                      .padStart(2, '0')}`
+                  )
+                  .join(', ')
+              : '-'
+          }
+        </td>
+
         <td>${new Date(item.created_at).toLocaleString('vi-VN')}</td>
       `;
       body.appendChild(row);
