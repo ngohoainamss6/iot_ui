@@ -168,8 +168,7 @@ async function fetchData() {
     document.getElementById('hum').textContent =
       sensor.hum != null ? sensor.hum + ' %' : '- %';
     
-    document.getElementById('flow').textContent =
-      sensor.flow != null ? sensor.flow + ' L/phút' : '- L/phút';
+    document.getElementById('flow').textContent = sensor.flow ?? '-';
     
     document.getElementById('currentMode').textContent =
       status.mode ?? '-';
@@ -182,7 +181,6 @@ async function fetchData() {
     
     document.getElementById('next_time').textContent =
       status.next_time != null ? status.next_time + ' phút' : '- phút';
-
 
 
     document.getElementById('pumpPower').value = status.pump_power ?? 36;
