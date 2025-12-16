@@ -159,15 +159,32 @@ async function fetchData() {
     const statusRes = await fetch(`${API_BASE}/api/status`);
     const status = await statusRes.json();
 
-    document.getElementById('soil').textContent = sensor.soil ?? '- %';
-    document.getElementById('temp').textContent = sensor.temp ?? '- °C';
-    document.getElementById('hum').textContent = sensor.hum ?? '- %';
-    document.getElementById('flow').textContent = sensor.flow ?? '-';
+    document.getElementById('soil').textContent =
+      sensor.soil != null ? sensor.soil + ' %' : '- %';
+    
+    document.getElementById('temp').textContent =
+      sensor.temp != null ? sensor.temp + ' °C' : '- °C';
+    
+    document.getElementById('hum').textContent =
+      sensor.hum != null ? sensor.hum + ' %' : '- %';
+    
+    document.getElementById('flow').textContent =
+      sensor.flow != null ? sensor.flow + ' L/phút' : '- L/phút';
+    
+    document.getElementById('currentMode').textContent =
+      status.mode ?? '-';
+    
+    document.getElementById('min_val').textContent =
+      status.min_val != null ? status.min_val + ' %' : '- %';
+    
+    document.getElementById('max_val').textContent =
+      status.max_val != null ? status.max_val + ' %' : '- %';
+    
+    document.getElementById('next_time').textContent =
+      status.next_time != null ? status.next_time + ' phút' : '- phút';
 
-    document.getElementById('currentMode').textContent = status.mode ?? '-';
-    document.getElementById('min_val').textContent = status.min_val ?? '- %';
-    document.getElementById('max_val').textContent = status.max_val ?? '- %';
-    document.getElementById('next_time').textContent = status.next_time ?? '- phút';
+
+
     document.getElementById('pumpPower').value = status.pump_power ?? 36;
     document.getElementById('pumpPowerLabel').textContent = (status.pump_power ?? 36)+'%';
  
