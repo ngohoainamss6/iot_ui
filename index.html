@@ -17,6 +17,12 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
 <body> 
 <div class="container py-4">
 <h1 class="fw-bold text-center mb-4">🌱 IoT Smart Garden Dashboard</h1>
+<div class="text-center mb-4">
+  <button class="btn btn-success px-4 py-2" onclick="gotoOTA()">
+    🔄 Cập nhật Firmware (OTA)
+  </button>
+</div>
+
 
 <div class="row g-3 mb-3">
   <div class="col-md-4"><div class="card gradient-card"><div>🌿 Độ ẩm đất</div><div class="sensor-value" id="soil">- %</div></div></div>
