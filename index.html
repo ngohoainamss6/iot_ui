@@ -246,7 +246,7 @@ document.getElementById('addScheduleBtn').addEventListener('click', async ()=>{
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({add_schedule:{hour,minute}})
   });
-  document.getElementById('scheduleTime').value='';
+  
 });
 async function removeSchedule(index){
   await fetch(`${API_BASE}/api/control`,{
